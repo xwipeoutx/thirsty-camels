@@ -1,0 +1,81 @@
+//bilinear interpoalation (half float)
+half4 h4texRECTbilerp(samplerRECT tex, half2 s)
+{
+  half4 st;
+  st.xy = floor(s - 0.5) + 0.5;
+  st.zw = st.xy + 1;
+  
+  half2 t = s - st.xy; //interpolating factors 
+    
+  half4 tex11 = texRECT(tex, st.xy);
+  half4 tex21 = texRECT(tex, st.zy);
+  half4 tex12 = texRECT(tex, st.xw);
+  half4 tex22 = texRECT(tex, st.zw);
+
+  // bilinear interpolation
+  return lerp(lerp(tex11, tex21, t.x), lerp(tex12, tex22, t.x), t.y);
+}
+
+//bilinear interpolation (float)
+float4 f4texRECTbilerp(samplerRECT tex, float2 s)
+{
+  float4 st;
+  st.xy = floor(s - 0.5) + 0.5;
+  st.zw = st.xy + 1;
+  
+  //return -( s.xyxy - st.zwzw );
+  
+  float2 t = s - st.xy; //interpolating factors 
+    
+  float4 tex11 = texRECT(tex, st.xy);
+  float4 tex21 = texRECT(tex, st.zy);
+  float4 tex12 = texRECT(tex, st.xw);
+  float4 tex22 = texRECT(tex, st.zw);
+
+  float4 lerpa = lerp(lerp(tex11, tex21, t.x), lerp(tex12, tex22, t.x), t.y);
+  return lerpa;//clamp(lerpa, 0, 1);
+}
+
+//neighbour lookup
+inline void f4texRECTneighbours(samplerRECT tex,
+						 float2 s,
+						 out float4 left,
+						 out float4 right,
+						 out float4 up,
+						 out float4 down)
+{
+	float3 p  = float3(-1, 0, 1);
+	
+	down = texRECT(tex, s + p.yx);
+	up = texRECT(tex, s + p.yz);
+	left = texRECT(tex, s + p.xy);
+	right = texRECT(tex, s + p.zy);
+}
+	
+//neighbour lookup
+void f1texRECTneighbours(samplerRECT tex,
+						 float2 s,
+						 out float left,
+						 out float right,
+						 out float up,
+						 out float down)
+{
+	float3 p  = float3(-1, 0, 1);
+	
+	down = texRECT(tex, s + p.yx).x;
+	up = texRECT(tex, s + p.yz).x;
+	left = texRECT(tex, s + p.xy).x;
+	right = texRECT(tex, s + p.zy).x;
+}
+
+float randTex(int2 coords)
+{	
+	int rnd = (coords.x * 2309 + coords.y+0.5);
+
+	//rnd = (rnd * 15731 + 789221) * rnd + 3625650089;
+	rnd = (rnd * 15731 + 789221) * rnd + 36256589;
+	float ret = (sin((float)rnd)+1.01)/2;
+
+	//float rnd = (coords.y % 15 < 0.01) ? 1 : 0;
+	return ret;
+}

@@ -1,0 +1,391 @@
+
+#include "Utils.cg" // for texRECTBilerp() and texRECTneighbors()
+
+//advects data by velocity
+float4 advect (
+			float2 coords : TEXCOORD0,
+			uniform samplerRECT data,
+			uniform samplerRECT velocity,
+			uniform samplerRECT boundary, 
+			uniform float4 d) : COLOR
+{
+	float4 returnData, currData, stepBackData, stepForwardData;
+	float2 currVel;
+	float2 stepBackCoords, stepForwardCoords;
+	float2 stepBackVel, stepForwardVel;
+	float2 avgVel;
+
+	float2 alpha = d.w/float2(d.x, d.y);
+	
+	//do a texture lookup to get the velocity
+	currVel = (texRECT(velocity, coords)).xy;
+	currData = (texRECT(data, coords));
+	//currData = f4texRECTbilerp(data, coords);
+
+	//step back a timestep to get the previous velocity (phi n-1)
+	stepBackCoords = coords - alpha * currVel;
+	stepBackVel = texRECT(velocity, stepBackCoords).xy;
+	stepBackData = (texRECT(data, stepBackCoords));
+	
+	//stepBackData = f4texRECTbilerp(data, stepBackCoords);
+/*
+//return stepBackData;
+	stepForwardCoords = stepBackCoords + alpha * stepBackVel;
+	stepForwardVel = texRECT(velocity, stepForwardCoords).xy;
+	//stepForwardData = (texRECT(data, stepForwardCoords));
+	stepForwardData = f4texRECTbilerp(data, stepForwardCoords);
+
+	returnData = stepForwardData - 0.5*(currData - stepBackData);
+	return returnData;*/
+	
+	//average the previous velocity with this one for a closer estimate
+	//on the advection amount.
+	avgVel = (currVel + stepBackVel)/2;
+
+	//step back again, using the new and improved velocity
+	stepBackCoords = coords - alpha * avgVel;
+
+	if (currData.xy != currVel) {
+		returnData = (1 - d.w*0.01*0) * f4texRECTbilerp(data, stepBackCoords);
+	} else {
+		returnData = f4texRECTbilerp(data, stepBackCoords);
+	}
+	//interpolate the step back position and return
+	returnData = f4texRECTbilerp(data, stepBackCoords);
+	return returnData;
+}
+
+//advects data by velocity
+half4 simpleAdvect (
+			float2 coords : TEXCOORD0,
+			uniform samplerRECT data,
+			uniform samplerRECT velocity,
+			uniform samplerRECT boundary,
+			uniform float2 scale,
+			uniform float4 d) : COLOR
+{
+	half4 returnVal;
+	half2 currVel;
+	half2 stepBackCoords;
+	half2 alpha = d.w/d.xy;
+	
+	//do a texture lookup to get the velocity
+	currVel = (texRECT(velocity, coords*scale)).xy;
+	
+	//currVel = float2(0,0.005);
+	
+	//step back a timestep to get the previous velocity
+	stepBackCoords = coords*scale - alpha * currVel;
+
+	//if it's a boundary, return base value
+	float bnd = texRECT(boundary, stepBackCoords);
+	
+	if (bnd > 0) {
+		returnVal = texRECT(data, coords);
+	} else {
+		//interpolate the step back position and return
+		returnVal = f4texRECTbilerp(data, stepBackCoords/scale);
+	}
+
+	/*
+	if (currData.xy != currVel) {
+		returnVal = (1 - d.w*0.01*0) * f4texRECTbilerp(data, stepBackCoords);
+	} else {
+		returnVal = f4texRECTbilerp(data, stepBackCoords);
+	}
+	*/
+	//returnVal = texRECT(data, stepBackCoords);
+	return returnVal;
+}
+
+//advects data by velocity
+float4 vorticity (
+			float2 coords : TEXCOORD0,
+			uniform samplerRECT velocity,
+			uniform float4 d) : COLOR
+{
+	float4 currVel;
+	float2 offset;
+	float4 close, far, left, right, up, down;
+
+	//do a texture lookup to get the velocity
+	currVel = (texRECT(velocity, coords));
+
+	f4texRECTneighbours(velocity, coords, left, right, up, down);
+	
+	offset = 0.5*d.xy*d.w*float2(
+		right.x + left.x,
+		up.y + down.y
+	);
+	
+	currVel.xy += offset;
+	return currVel;
+}
+
+float4 inject(
+			float2 coords : TEXCOORD0,
+			uniform float scale,
+			uniform samplerRECT data,
+			uniform float4 color,
+			uniform float2 p) : COLOR
+{
+	float4 returnVal = texRECT(data, coords);
+
+	//find distance from coords to p
+	float2 vec = p.xy - coords;
+	float mag = length(vec);
+	
+	//draw dot if that distance is large than 100
+	//returnVal = returnVal + 0.1*exp(-mag*0.1)*color;
+
+	if (mag < scale)
+	{
+		returnVal += color;
+	}
+		
+	return returnVal;
+}
+
+//sets the boundary values (4d)
+float4 boundary4d(float2 coords : TEXCOORD0,
+				  uniform samplerRECT data,
+				  uniform samplerRECT offset,
+				  uniform samplerRECT boundaries,
+				  uniform float scale) : COLOR
+{
+	float4 o = texRECT(offset, coords);
+	float b = texRECT(boundaries, coords);
+	
+	if ((o.x == 0 && o.y == 0)) {
+		scale = 1;
+	}	
+	
+	return (1-b) * scale * texRECT(data, coords+o.xy);
+}
+
+//sets the boundary (1d)
+float boundary1d(float2 coords : TEXCOORD0,
+				  uniform samplerRECT data,
+				  uniform samplerRECT offset,
+				  uniform float scale) : COLOR
+{
+	float4 o = texRECT(offset, coords);
+	
+	if (o.x == 0 && o.y == 0) {
+		scale = 1;
+	}	
+	return scale * texRECT(data, coords+o.xy).x;
+}
+
+float4 calcOffsets(uniform samplerRECT boundaries,
+				  float2 coords : TEXCOORD0,
+				  uniform float2 res) : COLOR {
+	float4 bnd;
+	float left, right, up, down;
+	float4 offset = float4(0,0,0,0);
+
+	bnd = texRECT(boundaries, coords);
+	
+	f1texRECTneighbours(boundaries, coords, left, right, up, down);
+
+	if (right - left < 0) { //arb right wall
+		offset.x = 1;
+	}
+
+	if (right - left > 0) { //arb left wall
+		offset.x = -1;
+	}
+
+	if (up - down > 0) { //arb bottom wall
+		offset.y = -1;
+	}
+
+	if (up - down < 0) { //arb top wall
+		offset.y = 1;
+	}
+	
+	if (coords.x - 1 < 0) { //left bound
+		offset.x = 1; 
+	}
+
+	if (coords.x - res.x+1 > 0) { //right bound
+		offset.x = -1; 
+	}
+
+	if (coords.y - 1 < 0) { //bottom bound
+		offset.y = 1; 
+	}
+	
+	if (coords.y - res.y+1 > 0) { //top bound
+		offset.y = -1; 
+	}
+
+	return offset;
+}
+
+float4 jacobi4d(uniform samplerRECT x, //for Ax = b
+			  uniform samplerRECT b, //for Ax = b
+			  uniform samplerRECT boundary, //boundary value
+			  float2 coords : TEXCOORD0, 
+			  uniform float alpha, 
+			  uniform float beta) : COLOR
+{
+	float4 a = texRECT(b, coords);
+	float4 left, right, up, down;
+	f4texRECTneighbours(x, coords, left, right, up, down);
+	
+	float4 result = (left + right + up + down + alpha*a) / beta;
+	return result;
+}
+
+float jacobi1d(uniform samplerRECT x, //for Ax = b
+			  uniform samplerRECT b, //for Ax = b
+			  uniform samplerRECT boundary, //boundary value
+			  float2 coords : TEXCOORD0, 
+			  uniform float alpha, 
+			  uniform float beta) : COLOR
+{
+	float a = texRECT(b, coords);
+	float left, right, up, down;
+	f1texRECTneighbours(x, coords, left, right, up, down);
+
+	float result = (left + right + up + down + alpha*a) / beta;
+
+	return result;
+}
+
+float divField(samplerRECT velocity,
+				   float2 coords : TEXCOORD0,
+				   uniform float4 d) : COLOR
+{
+	float result;
+
+	float4 left, right, up, down;
+	f4texRECTneighbours(velocity, coords, left, right, up, down);
+
+	result  = ((right.x - left.x) / (2*d.x)) + ((up.y - down.y) / (2*d.y));
+
+	return result;
+}
+
+float4 subtractPressureGradient(uniform samplerRECT pressure,
+						   uniform samplerRECT velocity,
+						   float2 coords : TEXCOORD0,
+						   uniform float4 d) : COLOR
+{
+	float4 result;
+	float left, right, up, down;
+
+	f1texRECTneighbours(pressure, coords, left, right, up, down);
+
+	result = texRECT(velocity, coords);
+	result.x -=  ((right - left)/(2*d.x));
+	result.y -=  ((up - down)/(2*d.y));
+	return result;
+
+}
+				
+float4 perturb (uniform samplerRECT velocity,
+				uniform samplerRECT data,
+				uniform float4 d,
+				uniform float4 dData,
+				uniform float3 densities,
+				float2 coords : TEXCOORD0) : COLOR
+{
+	float2 c = coords;
+	c.x /= d.x;
+	c.y /= d.y;
+	float4 col = texRECT(data, c);
+	float density = dot(col.rgb, densities.rgb);	
+	
+	float4 vel = texRECT(velocity, coords);
+	vel.y += density * d.a;
+	
+	return vel;
+}
+
+float4 renderFluid(uniform samplerRECT velocity,
+				   uniform samplerRECT data,
+				   uniform samplerRECT pressure,
+				   uniform samplerRECT boundaries,
+				   uniform float2 scale,
+				   float2 coords : TEXCOORD0) : COLOR
+{
+	float4 vel;
+	float2 velPos = coords*scale;
+	float4 result = texRECT(velocity, velPos);
+	float4 v = texRECT(velocity, velPos);
+	float4 d = texRECT(data, coords);
+	float4 p = texRECT(pressure, velPos);
+	float4 b = texRECT(boundaries, velPos);
+
+	bool renderFluid = true;
+	bool renderLIC = false;
+	bool renderNullclines = false;
+
+	if (renderFluid) {
+		result =  b+d;
+		//result.a = max(max(result.r, result.g), result.b);
+		result.a = clamp((result.r + result.g + result.b)/3, 0, 1);
+		result.rgb = normalize(result.rgb);
+	}
+
+	if (renderLIC) {
+		float curr = randTex(coords);
+		int numSteps = 50;
+	
+		for (int i=0; i<numSteps; i++) {
+			 vel = texRECT(velocity, velPos);
+			 velPos = velPos - vel.xy;
+			 curr = curr + randTex(velPos);
+		}
+		curr = curr/(numSteps+1);
+	
+		if (b.x == 1) curr = 1;
+		result *= 0.5;
+		result += curr*0.5;
+		result.a = 1;
+	}
+	
+	if (renderNullclines) {
+	
+		float  leftX = (texRECT(velocity, coords-float2(1,0)).x);
+		float rightX = (texRECT(velocity, coords+float2(1,0)).x);
+		if (abs(leftX) > abs(v.x)
+		 && abs(rightX) > abs(v.x)) {
+			result.r = 1;
+		}
+		
+		float    topY = (texRECT(velocity, coords-float2(0,1)).y);
+		float bottomY = (texRECT(velocity, coords+float2(0,1)).y);
+		if (abs(topY) > abs(v.y)
+		 && abs(bottomY) > abs(v.y)) {
+			result.g = 1;
+		}
+	}
+	
+	
+	return result;
+}
+
+// Culling sets the depth buffer to a value proportional to the length
+// of the vector in the velocity fragment at the time. Essentially,
+// a low depth value returned here will mean less jacobi iterations are
+// performed on it, because it changes the z value each iteration
+half cull(uniform samplerRECT velocity,
+		   uniform samplerRECT data,
+		   uniform samplerRECT boundaries,
+		   float2 coords : TEXCOORD0) : DEPTH
+{
+	float4 v = texRECT(velocity, coords);
+	float4 d = texRECT(data, coords);
+	float4 b = texRECT(boundaries, coords);
+	
+	//cut out fragments we don't want to process	
+	bool processFragment = true;
+	if (b.x == 1) processFragment = false;
+	if (!processFragment) return 0.0; //boundary - just ignore it always
+	
+	float len = min(length(v.xy),1);
+	return (len*0.7) + 0.3;
+}

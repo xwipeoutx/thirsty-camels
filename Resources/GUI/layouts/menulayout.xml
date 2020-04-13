@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<GUILayout>
+    <Window Type="DefaultWindow" Name="Menu">
+        <Window Type="TaharezLook/StaticImage" Name="Menu/Background">
+            <Property Name="UnifiedPosition" Value="{{0.0,0},{0.0,0}}" />
+            <Property Name="UnifiedSize" Value="{{1.0,0},{1.0,0}}" />
+    		<Property Name="FrameEnabled" value="False" />
+    		<Property Name="BackgroundEnabled" Value="False" />		
+                    
+	        <Window Type="TaharezLook/StaticText" Name="Menu/Title">
+	            <Property Name="UnifiedPosition" Value="{{0.05,0},{0.05,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.6,0},{0.4,0}}" />
+	            <Property Name="Text" Value="Thirsty Thirsty Camel" />
+	            <Property Name="Font" Value="GoudyStout-Large" />
+    			<Property Name="FrameEnabled" Value="False" />
+    			<Property Name="BackgroundEnabled" Value="False" />		
+				<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+	        </Window>
+                    
+	        <Window Type="TaharezLook/Button" Name="Menu/FreePlayButton">
+	            <Property Name="UnifiedPosition" Value="{{0.65,0},{0.10,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.3,0},{0.1,0}}" />
+	            <Property Name="Text" Value="Free Play" />
+	        </Window>
+                    
+	        <Window Type="TaharezLook/Button" Name="Menu/PlayButton">
+	            <Property Name="UnifiedPosition" Value="{{0.65,0},{0.30,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.3,0},{0.1,0}}" />
+	            <Property Name="Text" Value="Play" />
+	        </Window>
+	                
+	        <Window Type="TaharezLook/Button" Name="Menu/OptionsButton">
+	            <Property Name="UnifiedPosition" Value="{{0.65,0},{0.50,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.3,0},{0.1,0}}" />
+	            <Property Name="Text" Value="Options" />
+	        </Window>
+	        
+	        <Window Type="TaharezLook/Button" Name="Menu/QuitButton">
+	            <Property Name="UnifiedPosition" Value="{{0.65,0},{0.70,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.3,0},{0.1,0}}" />
+	            <Property Name="Text" Value="Exit" />
+	        </Window>
+	        
+            <Window Type="TaharezLook/StaticText" Name="Menu/HighScores">
+	            <Property Name="UnifiedPosition" Value="{{0.7,0},{0.75,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.2,0},{0.2,0}}" />
+	            <Property Name="Text" Value="High Score: 0" />
+	            <Property Name="FrameEnabled" Value="False" />
+	            <Property Name="BackgroundEnabled" Value="False" />
+				<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+	        </Window>
+	        
+        </Window>
+    
+        
+    </Window>
+</GUILayout>

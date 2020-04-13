@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<GUILayout>
+    <Window Type="DefaultWindow" Name="Load">
+            
+        <!-- Load Message -->
+        <Window Type="TaharezLook/StaticText" Name="Load/PleaseWait">
+            <Property Name="UnifiedPosition" Value="{{0.2,0},{0.2,0}}" />
+            <Property Name="UnifiedSize" Value="{{0.6,0},{0.2,0}}" />
+            <Property Name="Text" Value="Please wait, we're loading it up now!" />
+            <Property Name="FrameEnabled" Value="False" />
+            <Property Name="BackgroundEnabled" Value="False" />
+            
+            <Property Name="HorzFormatting" Value="HorzCentred" />
+            <Property Name="Font" Value="GoudyStout-Small" />
+        </Window>
+        
+        <!-- Load Title -->
+        <Window Type="TaharezLook/StaticText" Name="Load/Loading">
+            <Property Name="UnifiedPosition" Value="{{0.1,0},{0.5,0}}" />
+            <Property Name="UnifiedSize" Value="{{0.8,0},{0.35,0}}" />
+            <Property Name="Text" Value="Loading..." />
+            <Property Name="FrameEnabled" Value="False" />
+            <Property Name="BackgroundEnabled" Value="False" />
+            <Property Name="Font" Value="GoudyStout-Large" />
+            
+            <Property Name="HorzFormatting" Value="HorzCentred" />
+        </Window>
+        
+        <!-- Progress Bar -->
+        <Window Type="TaharezLook/StaticText" Name="Load/ProgressWrapper">
+            <Property Name="UnifiedPosition" Value="{{0.1,0},{0.9,0}}" />
+            <Property Name="UnifiedSize" Value="{{0.8,0},{0.05,0}}" />
+	        <Property Name="BackgroundEnabled" Value="False" />
+	        <Property Name="FrameEnabled" Value="True" />
+            <Property Name="HorzFormatting" Value="HorzCentred" />
+            <Property Name="Font" Value="GoudyStout-Small" />
+            <Property Name="Text" Value="0" />
+	        
+	        <Window Type="TaharezLook/StaticText" Name="Load/ProgressFluid">
+	            <Property Name="UnifiedPosition" Value="{{0.01,0},{0.1,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.98,0},{0.8,0}}" />
+		        <Property Name="BackgroundEnabled" Value="True" />
+		        <Property Name="FrameEnabled" Value="False" />
+		        <Property Name="BackgroundColours" Value="tl:CCFF0000 tr:88FF0000 bl:CCFF0000 br:88FF0000" />
+	        	
+	        </Window>
+	        
+        	
+        </Window>
+        
+    </Window>
+</GUILayout>

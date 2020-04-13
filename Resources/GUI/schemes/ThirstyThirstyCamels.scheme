@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<GUIScheme Name="ThirstyThirstyCamels">
+	<Font Name="GoudyStout-Small" Filename="GoudyStout-Small.font" />
+	<Font Name="GoudyStout-Normal" Filename="GoudyStout-Normal.font" />
+	<Font Name="GoudyStout-Large" Filename="GoudyStout-Large.font" />
+</GUIScheme>

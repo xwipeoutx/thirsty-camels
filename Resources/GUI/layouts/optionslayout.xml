@@ -1,0 +1,131 @@
+<?xml version="1.0" ?>
+<GUILayout>
+    <Window Type="DefaultWindow" Name="Options">
+        <Window Type="TaharezLook/StaticImage" Name="Options/Background">
+            <Property Name="UnifiedPosition" Value="{{0.1,0},{0.05,0}}" />
+            <Property Name="UnifiedSize" Value="{{0.8,0},{0.9,0}}" />
+			<Property Name="BackgroundColours" Value="tl:FF000000 tr:FF000000 bl:FF000000 br:FF000000" />
+                    
+	        <Window Type="TaharezLook/StaticText" Name="Options/Title">
+	            <Property Name="UnifiedPosition" Value="{{0.05,0},{0.05,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.6,0},{0.05,0}}" />
+	            <Property Name="Text" Value="Options" />
+	            <Property Name="Font" Value="GoudyStout-Normal" />
+    			<Property Name="FrameEnabled" Value="False" />
+    			<Property Name="BackgroundEnabled" Value="False" />		
+				<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+				<Property Name="VertFormatting" Value="TopAligned" />
+	        </Window>
+            
+            <Window Type="DefaultWindow" Name="Options/ControlContainer">
+	            <Property Name="UnifiedPosition" Value="{{0.05,0},{0.1,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.9,0},{0.75,0}}" />
+            
+            	<Window Type="TaharezLook/StaticText" Name="Options/ControlContainer/ResolutionLabel">
+		            <Property Name="UnifiedPosition" Value="{{0.0,0},{0.05,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.4,0},{0.05,0}}" />
+		            <Property Name="Text" Value="Resolution" />
+		            <Property Name="Font" Value="GoudyStout-Small" />
+	    			<Property Name="FrameEnabled" Value="False" />
+	    			<Property Name="BackgroundEnabled" Value="False" />		
+					<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+					<Property Name="VertFormatting" Value="TopAligned" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Combobox" Name="Options/ControlContainer/Resolution">
+	                <Property Name="UnifiedAreaRect" Value="{{0.4,0},{0.05,0},{0.9,0},{0.8,0}}" />
+	                <Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/StaticText" Name="Options/ControlContainer/FluidResolutionLabel">
+		            <Property Name="UnifiedPosition" Value="{{0.0,0},{0.15,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.4,0},{0.05,0}}" />
+		            <Property Name="Text" Value="Solver Resolution" />
+		            <Property Name="Font" Value="GoudyStout-Small" />
+	    			<Property Name="FrameEnabled" Value="False" />
+	    			<Property Name="BackgroundEnabled" Value="False" />		
+					<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+					<Property Name="VertFormatting" Value="TopAligned" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Combobox" Name="Options/ControlContainer/FluidResolution">
+	                <Property Name="UnifiedAreaRect" Value="{{0.4,0},{0.15,0},{0.9,0},{0.8,0}}" />
+	                <Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/StaticText" Name="Options/ControlContainer/SolverQualityLabel">
+		            <Property Name="UnifiedPosition" Value="{{0.0,0},{0.25,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.4,0},{0.05,0}}" />
+		            <Property Name="Text" Value="Solver Quality" />
+		            <Property Name="Font" Value="GoudyStout-Small" />
+	    			<Property Name="FrameEnabled" Value="False" />
+	    			<Property Name="BackgroundEnabled" Value="False" />		
+					<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+					<Property Name="VertFormatting" Value="TopAligned" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Combobox" Name="Options/ControlContainer/SolverQuality">
+	                <Property Name="UnifiedAreaRect" Value="{{0.4,0},{0.25,0},{0.9,0},{0.8,0}}" />
+	                <Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/StaticText" Name="Options/ControlContainer/ViscosityLabel">
+		            <Property Name="UnifiedPosition" Value="{{0.0,0},{0.35,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.4,0},{0.05,0}}" />
+		            <Property Name="Text" Value="Viscosity" />
+		            <Property Name="Font" Value="GoudyStout-Small" />
+	    			<Property Name="FrameEnabled" Value="False" />
+	    			<Property Name="BackgroundEnabled" Value="False" />		
+					<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+					<Property Name="VertFormatting" Value="TopAligned" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Editbox" Name="Options/ControlContainer/Viscosity">
+		            <Property Name="UnifiedPosition" Value="{{0.4,0},{0.35,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.4,0},{0.08,0}}" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/StaticText" Name="Options/ControlContainer/DensityLabel">
+		            <Property Name="UnifiedPosition" Value="{{0.0,0},{0.45,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.4,0},{0.05,0}}" />
+		            <Property Name="Text" Value="Densities (R G B)" />
+		            <Property Name="Font" Value="GoudyStout-Small" />
+	    			<Property Name="FrameEnabled" Value="False" />
+	    			<Property Name="BackgroundEnabled" Value="False" />		
+					<Property Name="HorzFormatting" Value="WordWrapLeftAligned" />
+					<Property Name="VertFormatting" Value="TopAligned" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Editbox" Name="Options/ControlContainer/DensityR">
+		            <Property Name="UnifiedPosition" Value="{{0.4,0},{0.45,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.15,0},{0.08,0}}" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Editbox" Name="Options/ControlContainer/DensityG">
+		            <Property Name="UnifiedPosition" Value="{{0.6,0},{0.45,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.15,0},{0.08,0}}" />
+            	</Window>
+            	
+            	<Window Type="TaharezLook/Editbox" Name="Options/ControlContainer/DensityB">
+		            <Property Name="UnifiedPosition" Value="{{0.8,0},{0.45,0}}" />
+		            <Property Name="UnifiedSize" Value="{{0.15,0},{0.08,0}}" />
+            	</Window>
+            	
+            </Window>
+            
+	        <Window Type="TaharezLook/Button" Name="Options/OkButton">
+	            <Property Name="UnifiedPosition" Value="{{0.5,0},{0.9,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.2,0},{0.075,0}}" />
+	            <Property Name="Text" Value="Ok" />
+	        </Window>
+	        
+	        <Window Type="TaharezLook/Button" Name="Options/CancelButton">
+	            <Property Name="UnifiedPosition" Value="{{0.75,0},{0.9,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.2,0},{0.075,0}}" />
+	            <Property Name="Text" Value="Cancel" />
+	        </Window>
+        </Window>
+    
+        
+    </Window>
+</GUILayout>
