@@ -1,6 +1,5 @@
 #include "CPhysicsManager.h"
-#include "CActor.h"
-
+#include "IPhysicsObject.h"
 #include "CLog.h"
 
 using namespace TTC;
@@ -67,8 +66,8 @@ void CPhysicsManager::SetupWorldBoundaries()
 	b2PolygonDef horiShapeCfg, vertShapeCfg;
 	horiShapeCfg.SetAsBox(w, 0.5f);
 	vertShapeCfg.SetAsBox(0.5f, h);
-	//fixme horiShapeCfg.filter.categoryBits = CActor::ACTOR_STATIONARY;
-	//fixme vertShapeCfg.filter.categoryBits = CActor::ACTOR_STATIONARY;
+	horiShapeCfg.filter.categoryBits = IPhysicsObject::PHYSICS_STATIONARY;
+	vertShapeCfg.filter.categoryBits = IPhysicsObject::PHYSICS_STATIONARY;
 	horiShapeCfg.friction = 10.f;
 	vertShapeCfg.friction = 10.f;
 
@@ -117,17 +116,17 @@ void CPhysicsManager::Update(float dt)
 	CollisionsMapCfg::iterator it;
 	for (it=mCollisions.begin(); it != mCollisions.end(); it++)
 	{
-		if (it->second.actor1 != NULL)
-			it->second.actor1->Collide(it->second.actor2, it->second, 1);
-		if (it->second.actor2 != NULL)
-			it->second.actor2->Collide(it->second.actor1, it->second, 2);
+		if (it->second.object1 != NULL)
+			it->second.object1->Collide(it->second.object2, it->second, 1);
+		if (it->second.object2 != NULL)
+			it->second.object2->Collide(it->second.object1, it->second, 2);
 	}
 }
 
 void CPhysicsManager::RenderDebug()
 {
 	if (mDebuggingEnabled)
-		mDebugDraw.Render();
+		mDebugDraw.Draw();
 }
 
 void CPhysicsManager::ToggleDebug()
@@ -150,11 +149,11 @@ void CPhysicsManager::Add(const b2ContactPoint *point)
 	b2Shape *shape1 = point->shape1;
 	b2Shape *shape2 = point->shape2;
 
-	CActor *actor1 = static_cast<CActor*>(shape1->GetUserData());
-	CActor *actor2 = static_cast<CActor*>(shape2->GetUserData());
+	IPhysicsObject *object1 = static_cast<IPhysicsObject*>(shape1->GetUserData());
+	IPhysicsObject *object2 = static_cast<IPhysicsObject*>(shape2->GetUserData());
 	ContactPoint c;
-	c.actor1 = actor1;
-	c.actor2 = actor2;
+	c.object1 = object1;
+	c.object2 = object2;
 	c.normal = point->normal;
 	mCollisions[point->id.key] = c;
 }

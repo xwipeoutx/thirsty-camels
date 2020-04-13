@@ -64,17 +64,24 @@ void CPhysicsDebugDraw::DrawXForm(const b2XForm& xf)
 	return;
 }
 
-void CPhysicsDebugDraw::Render()
+void CPhysicsDebugDraw::Draw()
 {
+
+	GLboolean tex2d = glIsEnabled(GL_TEXTURE_2D);
+	GLboolean depthTest = glIsEnabled(GL_DEPTH_TEST);
+
 	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_DEPTH_TEST);
+
 	RenderPolygons();
 	RenderSolidPolygons();
 	RenderCircles();
 	RenderSolidCircles();
 	RenderSegments();
 	RenderXForms();
-	glEnable(GL_TEXTURE_2D);
-
+	
+	if (tex2d) glEnable(GL_TEXTURE_2D);
+	if (depthTest) glEnable(GL_DEPTH_TEST);
 }
 void CPhysicsDebugDraw::Reset()
 {

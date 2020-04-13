@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 namespace TTC
 {
@@ -30,5 +31,8 @@ namespace TTC
 		return str.str();
 	}
 
+	inline float randf() {
+		return (float)rand()/RAND_MAX;
+	}
 
 };

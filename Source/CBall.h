@@ -8,6 +8,8 @@
 
 namespace TTC
 {
+	class CSprite;
+
 	class CBall : public CActor, public FluidSolver::IVelocityPoller
 	{
 	public:
@@ -16,6 +18,7 @@ namespace TTC
 
 		virtual bool Update(float dt);
 		virtual void Draw();
+		virtual void Collide(IPhysicsObject *other, const CPhysicsManager::ContactPoint &cp, int pos);
 
 	void UpdateVelocity(const FluidSolver::Vector &v)
 	{
@@ -24,12 +27,12 @@ namespace TTC
 
 	protected:
 		float mSpeedUp;
-		int mCallList;
 
-		b2Body *mBody;
 		float mRadius;
 
 		FluidSolver::Vector mVelocity;
 		FluidSolver::Vector mFluidVelocity;
+
+		CSprite *mSprite;
 	};
 };

@@ -13,12 +13,13 @@ namespace TTC
 	class CScorezone;
 	class CRandomInjector;
 	class CFluidInjector;
+	class CCamel;
 
-	class CFreePlayState : public ILoadableGameState
+	class CPlayState : public ILoadableGameState
 	{
 	public:
-		CFreePlayState(void);
-		~CFreePlayState(void);
+		CPlayState(void);
+		~CPlayState(void);
 
 		float PreLoadState(int pass);
 		int GetLoadPassesRequired() { return 5; }
@@ -33,8 +34,10 @@ namespace TTC
 		virtual void Draw();
 		virtual bool Update(float dt);
 		
-		inline virtual const std::string GetStateName(){return "FreePlayState";}
+		inline virtual const std::string GetStateName(){return "PlayState";}
 
+	protected:
+		void SpawnRandomBall();
 	private:
 		// FIXME: Config?
 		static const int Width = 8;
@@ -42,16 +45,14 @@ namespace TTC
 
 		CGameBoard *mGameBoard;
 		float mElapsed;
-		bool mAutoInject;
 		
-
 		CEGUI::Window *mWindow;
-		COptionsWindow *mOptionsWindow;
-
+		
 		// Attachments
 		CBallManager *mBallManager;
-		CScorezone *mScorezone;
 		CRandomInjector *mRandomInjector;
-		CFluidInjector *mFluidInjector;
+
+		CCamel *mCamel1;
+		CCamel *mCamel2;
 	};
 }

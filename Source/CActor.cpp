@@ -3,7 +3,7 @@
 using namespace TTC;
 
 CActor::CActor()
-: mFlags(ACTOR_NONE), mDying(false)
+: mDying(false)
 {
 }
 

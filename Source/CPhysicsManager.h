@@ -8,7 +8,7 @@
 
 namespace TTC
 {
-	class CActor;
+	class IPhysicsObject;
 
 	const float PHYSICS_DT = 0.02f;
 	const int MAX_PHYSICS_TICKS = 5;
@@ -17,7 +17,7 @@ namespace TTC
 	public:
 		struct ContactPoint
 		{
-			CActor *actor1, *actor2;
+			IPhysicsObject *object1, *object2;
 			b2Vec2 normal;
 		};
 		CPhysicsManager(void);

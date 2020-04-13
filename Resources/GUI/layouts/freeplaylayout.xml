@@ -8,11 +8,20 @@
 	       	<Property Name="BackgroundEnabled" Value="False" />
 	        <Property Name="FrameEnabled" Value="False" />
 	            
-	        <!-- Score -->
+	        <!-- Options -->
             <Window Type="TaharezLook/StaticText" Name="FreePlay/HUD/OptionsLabel">
 	            <Property Name="UnifiedPosition" Value="{{0.05,0},{0.0,0}}" />
 	            <Property Name="UnifiedSize" Value="{{0.55,0},{0.9,0}}" />
 	            <Property Name="Text" Value="Press 'o' for options" />
+	            <Property Name="FrameEnabled" Value="False" />
+	            <Property Name="BackgroundEnabled" Value="False" />
+	        </Window>
+	        
+	        <!-- Options -->
+            <Window Type="TaharezLook/StaticText" Name="FreePlay/HUD/Score">
+	            <Property Name="UnifiedPosition" Value="{{0.65,0},{0.0,0}}" />
+	            <Property Name="UnifiedSize" Value="{{0.3,0},{0.9,0}}" />
+	            <Property Name="Text" Value="Score: 0" />
 	            <Property Name="FrameEnabled" Value="False" />
 	            <Property Name="BackgroundEnabled" Value="False" />
 	        </Window>

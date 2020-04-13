@@ -3,12 +3,14 @@
 
 #include "CGameWindow.h"
 #include "CGraphicsManager.h"
+#include "CSpriteFactory.h"
 
 #include "CTimer.h"
 #include "CGameWindow.h"
 #include "CHud.h"
 #include "CConfig.h"
 
+#include <ctime>
 #include "common.h"
 using namespace TTC;
 
@@ -18,6 +20,7 @@ CGameManager::CGameManager()
 	new CLog();
 	new CHud();
 	new CConfig();
+	new CSpriteFactory();
 	mGUIManager = new CGUIManager();
 }
 
@@ -38,10 +41,14 @@ CGameManager::~CGameManager()
 		delete CGameWindow::GetSingletonPtr();
 	if (CConfig::IsValid())
 		delete CConfig::GetSingletonPtr();
+	if (CSpriteFactory::IsValid())
+		delete CSpriteFactory::GetSingletonPtr();
 }
 
 void CGameManager::Start(IGameState* state)
 {
+	srand((int)time(0));
+
 	CLog::Get().Info("Starting Game Manager");
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		throw(Exception(SDL_GetError()));

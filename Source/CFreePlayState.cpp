@@ -8,20 +8,23 @@
 #include "CEGUI.h"
 #include "Exception.h"
 #include "CLoadState.h"
-#include "CBall.h"
+#include "CGameBoard.h"
+#include "CBallManager.h"
+#include "CFluidInjector.h"
+
+#include "CRandomInjector.h"
+#include "CScorezone.h"
 
 #include <iostream>
-#include <ctime>
 
 using namespace TTC;
 using namespace CEGUI;
-using namespace FluidSolver;
 using namespace std;
 
 CFreePlayState::CFreePlayState(void)
-: mElapsed(0), mWindow(NULL), mOptionsWindow(NULL), mAutoInject(false)
+: mElapsed(0), mWindow(NULL), mOptionsWindow(NULL), mAutoInject(false), mGameBoard(NULL), 
+mBallManager(NULL), mScorezone(NULL), mRandomInjector(NULL), mFluidInjector(NULL)
 {
-
 }
 
 CFreePlayState::~CFreePlayState(void)
@@ -31,7 +34,6 @@ CFreePlayState::~CFreePlayState(void)
 
 float CFreePlayState::PreLoadState(int pass)
 {
-	srand((int)time(0));
 	if (pass == 0) 
 	{
 		//load the play layout
@@ -44,30 +46,25 @@ float CFreePlayState::PreLoadState(int pass)
 	} 
 	else if (pass == 2)
 	{
-		CGraphicsManager &graphicsMgr = CGraphicsManager::GetSingleton();
-		mFluid = new FluidSolver::Fluid(
-			graphicsMgr.GetCgContext(), 
-			graphicsMgr.GetCgFragmentProfile(), 
-			TTC_CFG_GET_STR("resourcePath") + "Shaders/Fluid/"
-		);
-		//Init fluid
-		SetFluidOptions();
-		mFluid->Init(mOptions);
-		mFluid->SetColorDensities(TTC_CFG_GET(float, "densityR"), TTC_CFG_GET(float, "densityG"), TTC_CFG_GET(float, "densityB"));
-	}
-	else if (pass == 3)
-	{
 		new CPhysicsManager();
 		Box bounds;
 		bounds.x = bounds.y = 0;
 		bounds.w = Width;
 		bounds.h = Height;
 		CPhysicsManager::GetSingleton().SetupWorld(bounds);
-		CPhysicsManager::GetSingleton().ToggleDebug();
+	}
+	else if (pass == 3)
+	{
+		mGameBoard = new CGameBoard();
+		mGameBoard->Initialize(Width, Height);
+
+		mGameBoard->Attach(mBallManager = new CBallManager());
+		mGameBoard->Attach(mScorezone = new CScorezone());
+		mGameBoard->Attach(mFluidInjector = new CFluidInjector());
 	}
 	else if (pass == 4)
 	{
-		//fixme
+		glEnable(GL_TEXTURE_2D);
 	}
 	mNextPass++;
 	return (pass + 1.0f) / GetLoadPassesRequired();
@@ -82,23 +79,41 @@ void CFreePlayState::Enter()
 
 void CFreePlayState::Exit()
 {
-	while (!mBalls.empty()) 
+	if (mBallManager != NULL) 
 	{
-		CBall *ball = mBalls.back();
-		mFluid->DetachPoller(ball);
-		delete ball;
-		mBalls.pop_back();
+		mGameBoard->Detach(mBallManager);
+		delete mBallManager;
+		mBallManager = NULL;
 	}
+	if (mRandomInjector != NULL) 
+	{
+		mGameBoard->Detach(mRandomInjector);
+		delete mRandomInjector;
+		mRandomInjector = NULL;
+	}
+	if (mFluidInjector != NULL) 
+	{
+		mGameBoard->Detach(mFluidInjector);
+		delete mFluidInjector;
+		mFluidInjector = NULL;
+	}
+	if (mScorezone != NULL) 
+	{
+		mGameBoard->Detach(mScorezone);
+		delete mScorezone;
+		mScorezone = NULL;
+	}
+	
+	if (mGameBoard != NULL) delete mGameBoard;
+	mGameBoard = NULL;
 
+	// Physics Manager MUST be destroyed AFTER the game board.
 	delete CPhysicsManager::GetSingletonPtr();
 
-	delete mFluid;
-	mFluid = NULL;
-	
-	delete mOptionsWindow;
+	if (mOptionsWindow != NULL) delete mOptionsWindow;
 	mOptionsWindow = NULL;
 
-	//destroy CEGUI stuff
+	// Destroy CEGUI stuff
 	WindowManager::getSingleton().destroyWindow("FreePlay");
 	System::getSingleton().setGUISheet( NULL );
 }
@@ -116,82 +131,61 @@ void CFreePlayState::HandleEvent(const SDL_Event &e)
 {
 	if (mOptionsWindow->IsActive()) return;
 
+	mGameBoard->HandleEvent(e);
+
 	if (e.type == SDL_KEYDOWN)
 	{
 		//escape - back to menu screen
-		if (e.key.keysym.sym == SDLK_ESCAPE) CGameManager::GetSingleton().ChangeState(new CLoadState(new CMenuState()));
-		if (e.key.keysym.sym == SDLK_o) mOptionsWindow->Show();
-		if (e.key.keysym.sym == SDLK_g) mFluid->InjectCheckeredData();
-		if (e.key.keysym.sym == SDLK_j) mAutoInject = !mAutoInject;
-		if (e.key.keysym.sym == SDLK_SPACE)
+		if (e.key.keysym.sym == SDLK_ESCAPE) 
 		{
-			CBall *ball = new CBall(FluidSolver::Vector2(4, 3), 0.03f);
-			mFluid->AttachPoller(ball);
-			mBalls.push_back(ball);
+			CGameManager::GetSingleton().ChangeState(new CLoadState(new CMenuState()));
 		}
-	}
-	else
-	{
-		if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEMOTION)
+		else if (e.key.keysym.sym == SDLK_d) 
 		{
-			int x, y;
-			Uint8 state = SDL_GetMouseState(&x, &y);
-			SDLMod mod = SDL_GetModState();
-
-			if (state)
+			CPhysicsManager::GetSingleton().ToggleDebug();
+		}
+		else if (e.key.keysym.sym == SDLK_o) 
+		{
+			mOptionsWindow->Show();
+		}
+		else if (e.key.keysym.sym == SDLK_g) 
+		{
+			mGameBoard->GetFluid()->InjectCheckeredData();
+		}
+		else if (e.key.keysym.sym == SDLK_j) 
+		{
+			mAutoInject = !mAutoInject;
+			
+			if (mAutoInject)
 			{
-				float xPos = Width * e.motion.x/mOptions.RenderResolution.x;
-				float yPos = Height * (1-e.motion.y/mOptions.RenderResolution.y);
-				float dx = Width * e.motion.xrel/mOptions.RenderResolution.x;
-				float dy = Height * (-e.motion.yrel/mOptions.RenderResolution.y);
+				mGameBoard->Attach( mRandomInjector = new CRandomInjector() );
+			} else if (mRandomInjector != NULL) {
 
-				float r=0, g=0, b=0;
-
-				if (mod & KMOD_LCTRL) 
-				{
-					if (state & SDL_BUTTON(SDL_BUTTON_LEFT)) mFluid->Perturb(xPos, yPos, dx, dy, 0.25f);
-					if (state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) mFluid->Perturb(xPos, yPos, 0.2f*dx, 0.2f*dy, 0.25f);
-					if (state & SDL_BUTTON(SDL_BUTTON_RIGHT)) mFluid->Perturb(xPos, yPos, 5*dx, 5*dy, 0.25f);
-				}
-				else
-				{
-					if (state & SDL_BUTTON(SDL_BUTTON_LEFT)) r += 1;
-					if (state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) g += 1;
-					if (state & SDL_BUTTON(SDL_BUTTON_RIGHT)) b += 1;
-					
-					mFluid->Inject(xPos, yPos, r, g, b, 0.5f);
-				}
+				mGameBoard->Detach(mRandomInjector);
+				delete mRandomInjector;
+				mRandomInjector = NULL;
 			}
 		}
+		else if (e.key.keysym.sym == SDLK_SPACE)
+		{
+			mBallManager->AddBall(randf()*Width, randf()*Height);
+		}
 	}
+
 }
 void CFreePlayState::Draw()
 {
-	float min=0, max=10;
+	mGameBoard->Draw();
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, Width, 0, Height, 0, 4);
-
-	//reset model view matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-
-	//glDisable(GL_DEPTH_TEST);
-	mFluid->Render();
-	//glEnable(GL_DEPTH_TEST);
-
-	for (BallList::iterator it = mBalls.begin(); it != mBalls.end(); ++it) {
-		(*it)->Draw();
+	// score
+	static int mLastScore = 0;
+	if (mLastScore != mGameBoard->GetScore())
+	{
+		mLastScore = mGameBoard->GetScore();
+		std::string score = "Score: " + ToString( mLastScore );
+		WindowManager::getSingleton().getWindow("FreePlay/HUD/Score")->setText(score);
 	}
 
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
 }
 bool CFreePlayState::Update(float dt)
 {
@@ -200,58 +194,11 @@ bool CFreePlayState::Update(float dt)
 		if (mOptionsWindow->IsDone())
 		{
 			mOptionsWindow->Hide();
-			if (mOptionsWindow->IsApplied())
-			{
-				SetFluidOptions();
-				mFluid->Init(mOptions);
-				mFluid->SetColorDensities(TTC_CFG_GET(float, "densityR"), TTC_CFG_GET(float, "densityG"), TTC_CFG_GET(float, "densityB"));
-			}
+			if (mOptionsWindow->IsApplied()) mGameBoard->Reset(true);
 		}
 	}
 	else
 	{
-
-		//inject random thing random places
-		//fixme: Make random moving thing better, and member var instead of static
-		if (mAutoInject) 
-		{
-			static float rx=Width/2, ry=Height/2;
-			static float hue = 0, dhue = 0;
-			static float angle=0, dangle = 0;
-
-			
-			dangle += ((float)rand()/RAND_MAX - 0.5f);
-			//if (dangle > 0.5f) dangle = 0.5f;
-			//if (dangle < -0.5f) dangle = -0.5f;
-			angle += dangle;
-			rx += sin(dangle)*Width*dt;
-			ry += cos(dangle)*Height*dt;
-
-			if (rx > Width) rx -= Width;
-			else if (rx < 0) rx += Width;
-			if (ry > Height) ry -= Height;
-			else if (ry < 0) ry += Height;
-
-			dhue += ((float)rand()/RAND_MAX - 0.5f);
-			if (dhue > 5) dhue = 5;
-			if (dhue < -5) dhue = -5;
-			hue += dhue;
-			if (hue >= 360) hue -= 360;
-			else if (hue < 0) hue += 360;
-			int h = (int)hue;
-			float f = h/60.f - h/60;
-
-			float rr,rg,rb;
-			if (h < 60) { rr = 1; rg = f; rb = 0; }
-			else if (h < 120) { rr = 1-f; rg = 1; rb = 0; }
-			else if (h < 180) { rr = 0; rg = 1; rb = f; }
-			else if (h < 240) { rr = 0; rg = 1-f; rb = 1; }
-			else if (h < 300) { rr = f; rg = 0; rb = 1; }
-			else { rr = 1; rg = 0; rb = 1-f; }
-
-			mFluid->Inject(rx, ry, 10*rr*dt, 10*rg*dt, 10*rb*dt, 0.5f);
-		}
-
 		mElapsed += dt;
 
 		//options label
@@ -259,49 +206,15 @@ bool CFreePlayState::Update(float dt)
 		if (mElapsed > 5 && mElapsed < 10)
 		{
 			window->setAlpha(window->getAlpha() - 0.2f*dt);
-		} else if (mElapsed > 10) {
+		}
+		else if (mElapsed > 10) 
+		{
 			if (window->isVisible()) window->hide();
 		}
 
-		//fluid and ball update
-		mFluid->Update(dt);
-		CPhysicsManager::GetSingleton().Update(dt);
-		for (BallList::iterator it = mBalls.begin(); it != mBalls.end(); ++it) {
-			(*it)->Update(dt);
-		}
-
-		
+		// Game board update
+		mGameBoard->Update(dt);
 	}
 
 	return true;
-}
-
-
-void CFreePlayState::SetFluidOptions()
-{
-	//config
-	float resX = TTC_CFG_GET(float, "resolutionX");
-	float resY = TTC_CFG_GET(float, "resolutionY");
-	float fluidResX = TTC_CFG_GET(float, "fluidResolutionX");
-	float fluidResY = TTC_CFG_GET(float, "fluidResolutionY");
-	float viscosity = TTC_CFG_GET(float, "viscosity");
-
-	int solverOptions;
-	const string &quality = TTC_CFG_GET_STR("solverQuality");
-	if (quality == "Perfect") solverOptions = RS_PERFECT;
-	else if (quality == "Accurate") solverOptions = (RS_ACCURATE | RS_VORTICITY_CONFINEMENT);
-	else if (quality == "Nice") solverOptions = RS_NICE;
-	else if (quality == "Fast") solverOptions = RS_FAST;
-	else if (quality == "Ugly") solverOptions = RS_UGLY;
-	else solverOptions = RS_NONE; //error, don't do anything but pressure on render! bwa ha ha, that'll learn em
-
-	//viscosity 0 means no diffusion happens
-	//FIXME: really, this should happen in the solver
-	if (viscosity == 0) solverOptions &= ~(RS_DIFFUSE_DATA | RS_DIFFUSE_VELOCITY);
-
-	mOptions.RenderResolution = Vector(resX, resY);
-	mOptions.SolverResolution = Vector(fluidResX, fluidResY);
-	mOptions.Size = Vector((float)Width, (float)Height);
-	mOptions.SolverOptions = solverOptions | 0&RS_DOUBLE_PRECISION;
-	mOptions.Viscosity = viscosity;
 }

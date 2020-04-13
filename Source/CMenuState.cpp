@@ -5,20 +5,29 @@
 #include "CLoadState.h"
 #include "COptionsWindow.h"
 #include "CFreePlayState.h"
+#include "CPlayState.h"
 #include "CGUIManager.h"
+
+#include "CGameBoard.h"
+#include "CRandomInjector.h"
 
 using namespace TTC;
 using namespace CEGUI;
 CMenuState::CMenuState(void)
-: mWindow(NULL)
+: mWindow(NULL), mGameBoard(NULL), mRandomInjector(NULL)
 {
 	
 }
 
 CMenuState::~CMenuState(void)
 {
+	
 }
 
+int CMenuState::GetLoadPassesRequired()
+{
+	return 4;
+}
 
 float CMenuState::PreLoadState(int pass)
 {
@@ -34,7 +43,7 @@ float CMenuState::PreLoadState(int pass)
 	{
 		//load options window
 		mOptionsWindow = new COptionsWindow(true, mWindow);
-		percentDone = 85;
+		percentDone = 75;
 	} 
 	else if (pass == 2)
 	{	//subscribe events for play and quit buttons
@@ -51,6 +60,13 @@ float CMenuState::PreLoadState(int pass)
 
 		childWindow = WindowManager::getSingleton().getWindow("Menu/HighScores");
 		childWindow->setText("FIXME: Scores");
+		percentDone = 85;
+	}
+	else if (pass == 3)
+	{
+		mGameBoard = new CGameBoard();
+		mGameBoard->Initialize(8, 6);
+		mGameBoard->Attach(mRandomInjector = new CRandomInjector());
 		percentDone = 100;
 	}
 	mNextPass++;
@@ -66,6 +82,15 @@ void CMenuState::Enter()
 
 void CMenuState::Exit()
 {
+	if (mRandomInjector != NULL) {
+		mGameBoard->Detach(mRandomInjector);
+		delete mRandomInjector;
+		mRandomInjector = NULL;
+	}
+
+	if (mGameBoard != NULL) delete mGameBoard;
+	mGameBoard = NULL;
+
 	delete mOptionsWindow;
 	WindowManager::getSingleton().destroyWindow("Menu");
 	System::getSingleton().setGUISheet( NULL );
@@ -87,7 +112,7 @@ bool CMenuState::onFreePlayButtonClicked(const CEGUI::EventArgs &e)
 
 bool CMenuState::onPlayButtonClicked(const CEGUI::EventArgs &e)
 {
-	//fixmeCGameManager::GetSingleton().ChangeState(new CLoadState(new CPlayState()));
+	CGameManager::GetSingleton().ChangeState(new CLoadState(new CPlayState()));
 	return true;
 }
 
@@ -118,8 +143,10 @@ void CMenuState::HandleEvent(const SDL_Event &e)
 		{
 			switch (e.key.keysym.sym)
 			{
-			case SDLK_s:
 			case SDLK_RETURN:
+				CGameManager::GetSingleton().ChangeState(new CLoadState(new CPlayState()));
+				break;
+			case SDLK_SPACE:
 				CGameManager::GetSingleton().ChangeState(new CLoadState(new CFreePlayState()));
 				break;
 			case SDLK_ESCAPE:
@@ -129,4 +156,16 @@ void CMenuState::HandleEvent(const SDL_Event &e)
 			}
 		}
 	}
+}
+
+bool CMenuState::Update(float dt)
+{
+	// Game board update
+	mGameBoard->Update(dt);
+	return true;
+}
+
+void CMenuState::Draw()
+{
+	mGameBoard->Draw();
 }

@@ -29,7 +29,7 @@ namespace TTC
 		/// @param xf a transform.
 		virtual void DrawXForm(const b2XForm& xf);
 
-		void Render();
+		void Draw();
 		void Reset();
 	private:
 		void RenderPolygons();

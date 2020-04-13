@@ -34,10 +34,12 @@ void CConfig::LoadDefaults()
 #ifdef _DEBUG
 	mConfigMap["logLevel"] = "info";
 	mConfigMap["resourcePath"] = "../../../../Resources/";
+	mConfigMap["spritePath"] = "../../../../Resources/Images/";
 	mConfigMap["windowTitle"] = "Thirsty,Thirsty Camels! [DEBUG]";
 #else
 	mConfigMap["logLevel"] = "warn";
 	mConfigMap["resourcePath"] = "./Resources/";
+	mConfigMap["spritePath"] = "./Resources/Images/";
 	mConfigMap["windowTitle"] = "Thirsty, Thirsty Camels";
 #endif
 }
